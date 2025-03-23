@@ -1,4 +1,4 @@
-const Stock = require('../models/Stock');
+const Stock = require('../models/stockModel');
 
 // Get all stock levels
 // match Jira user story 4 track stock levels

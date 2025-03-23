@@ -1,4 +1,4 @@
-const Product = reuqire('../models/Product');
+const Product = require('../models/productModel');
 
 // Get all products
 const getProducts = async (req, res) => {

@@ -8,7 +8,7 @@ dotenv.config();
 const app = express();
 
 app.use(cors());
-app.use(express.json);
+app.use(express.json());
 
 //routes
 app.use('/api/auth', require('./routes/authRoutes'));
@@ -23,4 +23,4 @@ if(require.main === module){
     app.listen(PORT,() => console.log(`Server running on port ${PORT}`));
 }
 
-mudule.exports = app;
+module.exports = app;
