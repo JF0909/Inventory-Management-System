@@ -9,9 +9,11 @@ const mongoose = require('mongoose');
 const Stock = require('../models/Stock');
 //import stock controller
 const {createStockLevel, updateStockLevel, getStockLevels, getStockByProductId, deleteStock } = require('../controllers/stockController');
-const { expect } = chai;
+
 
 chai.use(chaiHttp);
+const { expect } = chai;
+
 let server;
 let port;
 

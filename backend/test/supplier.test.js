@@ -9,9 +9,11 @@ const mongoose = require('mongoose');
 const Supplier = require('../models/Supplier');
 //import supplier controller
 const { addSupplier, updateSupplier, deleteSupplier } = require('../controllers/supplierController');
-const { expect } = chai;
+
 
 chai.use(chaiHttp);
+const { expect } = chai;
+
 let server;
 let port;
 

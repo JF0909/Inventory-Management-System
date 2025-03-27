@@ -1,11 +1,16 @@
 const chai = require('chai');
+const chaiHttp = require('chai-http');
+const http = require('http');
+const app = require('../server'); 
+const connectDB = require('../config/db');
 const sinon = require('sinon');
 const mongoose = require('mongoose');
 const User = require('../models/User'); 
 const { login, Signup } = require('../controllers/authController');
-const { expect } = chai;
+
 
 chai.use(chaiHttp);
+const { expect } = chai;
 let server;
 let port;
 

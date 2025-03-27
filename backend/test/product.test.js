@@ -9,9 +9,10 @@ const mongoose = require('mongoose');
 const Product = require('../models/Product'); 
 //import productController
 const { updateProduct,getProducts,getProductById,addProduct,deleteProduct } = require('../controllers/productController'); 
-const { expect } = chai;
+
 
 chai.use(chaiHttp);
+const { expect } = chai;
 
 
 describe('AddProduct Function Test', () => {
