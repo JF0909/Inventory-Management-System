@@ -25,6 +25,7 @@ const getProductById = async (req, res) => {
 
 
 const addProduct = async (req,res) => {
+    console.log("addProduct function called!");
     try{
         const { name, category, price, stockLevel} = req.body;
         if(!name || ! category || !price || !stockLevel){
@@ -36,6 +37,7 @@ const addProduct = async (req,res) => {
         res.status(201).json({ message: "Successfully created the product", product});
 
     }catch (error) {
+        console.error("Error in addProduct:", error);
         res.status(500).json({ message: "Error" + error.message });
     }
 }

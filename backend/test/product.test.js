@@ -16,6 +16,16 @@ const { expect } = chai;
 
 
 describe('AddProduct Function Test', () => {
+  let createProductStub;
+
+  // Setup the stub before each test
+  beforeEach(() => {
+    createProductStub = sinon.stub(Product, 'create').resolves({ _id: "12345", name: "New Product" });;
+  });
+
+  afterEach(() => {
+    createProductStub.restore(); 
+  });
 
     it('should create a new product successfully', async () => {
       // Mock request data
@@ -28,7 +38,8 @@ describe('AddProduct Function Test', () => {
       const createdProduct = { _id: new mongoose.Types.ObjectId(), ...req.body, userId: req.user.id };
   
       // Stub Task.create to return the createdTask
-      const createStub = sinon.stub(Product, 'create').resolves(createdProduct);
+      //createProductStub.resolves(createdProduct);
+      createProductStub.returns(Promise.resolve(createdProduct));
   
       // Mock response object
       const res = {
@@ -37,20 +48,20 @@ describe('AddProduct Function Test', () => {
       };
   
       // Call function
+      console.log("Calling addProduct...");
       await addProduct(req, res);
+      console.log("addProduct finished execution!");
   
       // Assertions
-      expect(createStub.calledOnceWith({ userId: req.user.id, ...req.body })).to.be.true;
+      expect(createProductStub.calledOnceWith({ userId: req.user.id, ...req.body })).to.be.true;
       expect(res.status.calledWith(201)).to.be.true;
       expect(res.json.calledWith(createdProduct)).to.be.true;
-  
-      // Restore stubbed methods
-      createStub.restore();
     });
   
     it('should return 500 if an error occurs', async () => {
-      // Stub Task.create to throw an error
-      const createStub = sinon.stub(Product, 'create').throws(new Error('DB Error'));
+      // Stub Product.create to throw an error
+      //createProductStub.throws(new Error('DB Error'));
+      createProductStub.rejects(new Error('DB Error'));
   
       // Mock request data
       const req = {
@@ -70,15 +81,24 @@ describe('AddProduct Function Test', () => {
       // Assertions
       expect(res.status.calledWith(500)).to.be.true;
       expect(res.json.calledWithMatch({ message: 'DB Error' })).to.be.true;
-  
-      // Restore stubbed methods
-      createStub.restore();
     });
   
   });
   
+
+
   //test update product 
   describe('Update Function Test', () => {
+
+  let  updateProductStub;
+
+  beforeEach(() => {
+    updateProductStub = sinon.stub(Product, 'findById');
+  });
+
+  afterEach(() => {
+    updateProductStub.restore(); 
+  });
   
     it('should update product successfully', async () => {
       // Mock task data
@@ -89,15 +109,15 @@ describe('AddProduct Function Test', () => {
         category: "Old Category",
         price: 100,
         stockLevel: 50,
-        save: sinon.stub().resolvesThis(), // Mock save method
+        save: sinon.stub().resolvesThis(), 
       };
-      // Stub Task.findById to return mock task
-      const findByIdStub = sinon.stub(Product, 'findById').resolves(existingProduct);
+      
+      updateProductStub.resolves(existingProduct);
   
       // Mock request & response
       const req = {
         params: { id: productId },
-        body: { name: "Updated Product", category: "updated category", price: 120, stockLevel: 60 }
+        body: { name: "Updated Product", category: "Updated Category", price: 120, stockLevel: 60 }
       };
       const res = {
         json: sinon.spy(), 
@@ -113,17 +133,14 @@ describe('AddProduct Function Test', () => {
       expect(existingProduct.price).to.equal(120);
       expect(existingProduct.stockLevel).to.equal(60);
 
-      expect(res.status.called).to.be.false; 
+      expect(res.status.calledWith(200)).to.be.true; 
       expect(res.json.calledOnce).to.be.true;
-      //check
       expect(res.json.calledWith(existingProduct)).to.be.true;
   
-      // Restore stubbed methods
-      findByIdStub.restore();
     });
   
     it('should return 404 if task is not found', async () => {
-      const findByIdStub = sinon.stub(Product, 'findById').resolves(null);
+     updateProductStub.resolves(null);
   
       const req = { 
         params: { id: new mongoose.Types.ObjectId() }, 
@@ -139,11 +156,10 @@ describe('AddProduct Function Test', () => {
       expect(res.status.calledWith(404)).to.be.true;
       expect(res.json.calledWith({ message: 'Product not found' })).to.be.true;
   
-      findByIdStub.restore();
     });
   
     it('should return 500 on error', async () => {
-      const findByIdStub = sinon.stub(Product, 'findById').throws(new Error('DB Error'));
+       updateProductStub.throws(new Error('DB Error'));
   
       const req = { params: { id: new mongoose.Types.ObjectId() }, body: {name: "Product with Error"} };
       const res = {
@@ -155,8 +171,7 @@ describe('AddProduct Function Test', () => {
   
       expect(res.status.calledWith(500)).to.be.true;
       expect(res.json.called).to.be.true;
-  
-      findByIdStub.restore();
+
     });
   
   });
@@ -164,9 +179,18 @@ describe('AddProduct Function Test', () => {
 
   //test get all product
   describe('GetProduct Function Test', () => {
+    let  getproductsStub;
+
+    beforeEach(() => {
+      getproductsStub = sinon.stub(Product, 'find');
+    });
+
+    afterEach(() => {
+      getproductsStub.restore(); 
+    });
+
   
     it('should return products for the given user', async () => {
-      // Mock user ID
       const userId = new mongoose.Types.ObjectId();
   
       // Mock task data
@@ -175,8 +199,8 @@ describe('AddProduct Function Test', () => {
         { _id: new mongoose.Types.ObjectId(), name: "Product 2", category: "Category 2", price: 200, stockLevel: 30, userId }
       ];
   
-      // Stub Task.find to return mock tasks
-      const findStub = sinon.stub(Product, 'find').resolves(products);
+      // Stub product.find to return mock tasks
+      getproductsStub.resolves(products);
   
       // Mock request & response
       const req = { user: { id: userId } };
@@ -189,17 +213,15 @@ describe('AddProduct Function Test', () => {
       await getProducts(req, res);
   
       // Assertions
-      expect(findStub.calledOnceWith({ userId })).to.be.true;
+      expect(getproductsStub.calledOnceWith({ userId })).to.be.true;
       expect(res.json.calledWith(products)).to.be.true;
-      expect(res.status.called).to.be.false; // No error status should be set
+      expect(res.status.called).to.be.false; 
   
-      // Restore stubbed methods
-      findStub.restore();
     });
   
     it('should return 500 on error', async () => {
       // Stub Task.find to throw an error
-      const findStub = sinon.stub(Product, 'find').throws(new Error('DB Error'));
+      getproductsStub.throws(new Error('DB Error'));
   
       // Mock request & response
       const req = { user: { id: new mongoose.Types.ObjectId() } };
@@ -214,15 +236,21 @@ describe('AddProduct Function Test', () => {
       // Assertions
       expect(res.status.calledWith(500)).to.be.true;
       expect(res.json.calledWithMatch({ message: 'DB Error' })).to.be.true;
-  
-      // Restore stubbed methods
-      findStub.restore();
     });
   
   });
 
   //test get by ID
   describe("GetProductById Function Test", () => {
+    let  getproductByIdStub;
+
+    beforeEach(() => {
+      getproductByIdStub = sinon.stub(Product, 'findById');
+    });
+
+    afterEach(() => {
+      getproductByIdStub.restore(); 
+    });
   
     it("should return a product successfully", async () => {
       // Mock request data
@@ -232,7 +260,7 @@ describe('AddProduct Function Test', () => {
       const mockProduct = { _id: req.params.id, name: "Test Product", category: "Category 2", price: 200, stockLevel: 30 };
   
       // Stub Product.findById to return the mock product
-      const findByIdStub = sinon.stub(Product, "findById").resolves(mockProduct);
+      getproductByIdStub.resolves(mockProduct);
   
       // Mock response object
       const res = {
@@ -244,17 +272,14 @@ describe('AddProduct Function Test', () => {
       await getProductById(req, res);
   
       // Assertions
-      expect(findByIdStub.calledOnceWith(req.params.id)).to.be.true;
+      expect(getproductByIdStub.calledOnceWith(req.params.id)).to.be.true;
       expect(res.status.calledWith(200)).to.be.true;
       expect(res.json.calledWith(mockProduct)).to.be.true;
-  
-      // Restore stubbed methods
-      findByIdStub.restore();
     });
   
     it("should return 404 if product is not found", async () => {
       // Stub Product.findById to return null
-      const findByIdStub = sinon.stub(Product, "findById").resolves(null);
+      getproductByIdStub.resolves(null);
   
       // Mock request data
       const req = { params: { id: new mongoose.Types.ObjectId().toString() } };
@@ -269,17 +294,14 @@ describe('AddProduct Function Test', () => {
       await getProductById(req, res);
   
       // Assertions
-      expect(findByIdStub.calledOnceWith(req.params.id)).to.be.true;
+      expect(getproductByIdStub.calledOnceWith(req.params.id)).to.be.true;
       expect(res.status.calledWith(404)).to.be.true;
       expect(res.json.calledWith({ message: "Product not found" })).to.be.true;
-  
-      // Restore stubbed methods
-      findByIdStub.restore();
     });
   
     it("should return 500 if an error occurs", async () => {
-      // Stub Product.findById to throw an error
-      const findByIdStub = sinon.stub(Product, "findById").throws(new Error("DB Error"));
+    
+      getproductByIdStub.throws(new Error("DB Error"));
   
       // Mock request data
       const req = { params: { id: new mongoose.Types.ObjectId().toString() } };
@@ -296,9 +318,6 @@ describe('AddProduct Function Test', () => {
       // Assertions
       expect(res.status.calledWith(500)).to.be.true;
       expect(res.json.calledWithMatch({ message: "Error: DB Error" })).to.be.true;
-  
-      // Restore stubbed methods
-      findByIdStub.restore();
     });
   
   });
@@ -306,6 +325,17 @@ describe('AddProduct Function Test', () => {
   //test delete product
   
   describe('DeleteProduct Function Test', () => {
+    let  deleteproductStub;
+
+    beforeEach(() => {
+      deleteproductStub = sinon.stub(Product, 'findById');
+    });
+
+    afterEach(() => {
+      deleteproductStub.restore(); 
+    });
+
+
   
     it('should delete a product successfully', async () => {
       // Mock request data
@@ -315,7 +345,7 @@ describe('AddProduct Function Test', () => {
       const product = { remove: sinon.stub().resolves() };
   
       // Stub Task.findById to return the mock task
-      const findByIdStub = sinon.stub(Product, 'findById').resolves(product);
+      deleteproductStub.resolves(product);
   
       // Mock response object
       const res = {
@@ -327,17 +357,16 @@ describe('AddProduct Function Test', () => {
       await deleteProduct(req, res);
   
       // Assertions
-      expect(findByIdStub.calledOnceWith(req.params.id)).to.be.true;
-      expect(Product.remove.calledOnce).to.be.true;
+      expect(deleteproductStub.calledOnceWith(req.params.id)).to.be.true;
+      expect(Product.deleteOne.calledOnce).to.be.true;
+      expect(res.status.calledWith(200)).to.be.true;
       expect(res.json.calledWith({ message: 'Product deleted' })).to.be.true;
   
-      // Restore stubbed methods
-      findByIdStub.restore();
     });
   
-    it('should return 404 if task is not found', async () => {
-      // Stub Task.findById to return null
-      const findByIdStub = sinon.stub(Product, 'findById').resolves(null);
+    it('should return 404 if product is not found', async () => {
+      
+      deleteproductStub.resolves(null);
   
       // Mock request data
       const req = { params: { id: new mongoose.Types.ObjectId().toString() } };
@@ -352,17 +381,15 @@ describe('AddProduct Function Test', () => {
       await deleteProduct(req, res);
   
       // Assertions
-      expect(findByIdStub.calledOnceWith(req.params.id)).to.be.true;
+      expect(deleteproductStub.calledOnceWith(req.params.id)).to.be.true;
       expect(res.status.calledWith(404)).to.be.true;
-      expect(res.json.calledWith({ message: 'Task not found' })).to.be.true;
+      expect(res.json.calledWith({ message: 'Product not found' })).to.be.true;
   
-      // Restore stubbed methods
-      findByIdStub.restore();
     });
   
     it('should return 500 if an error occurs', async () => {
-      // Stub Task.findById to throw an error
-      const findByIdStub = sinon.stub(Product, 'findById').throws(new Error('DB Error'));
+      
+      deleteproductStub.throws(new Error('DB Error'));
   
       // Mock request data
       const req = { params: { id: new mongoose.Types.ObjectId().toString() } };
@@ -379,9 +406,6 @@ describe('AddProduct Function Test', () => {
       // Assertions
       expect(res.status.calledWith(500)).to.be.true;
       expect(res.json.calledWithMatch({ message: 'DB Error' })).to.be.true;
-  
-      // Restore stubbed methods
-      findByIdStub.restore();
     });
   
   });

@@ -19,6 +19,16 @@ let port;
 
 // test add stocklevel
 describe('Create Stock Function Test', () => {
+  let createStockStub;
+
+  beforeEach(() => {
+    createStockStub = sinon.stub(Stock.prototype, 'save');
+  });
+
+  afterEach(() => {
+    createStockStub.restore(); 
+  });
+
   it('should create a new stock successfully', async () => {
     const req = {
       body: {
@@ -34,16 +44,18 @@ describe('Create Stock Function Test', () => {
       json: sinon.spy()
     };
 
+    console.log('Creating stock with body:', req.body);
+
     // Stub the save function of Stock model to resolve
-    const saveStub = sinon.stub(Stock.prototype, 'save').resolves();
+    createStockStub.resolves();
+
+    console.log('Before calling createStockLevel');
 
     await createStockLevel(req, res);
 
+    expect(createStockStub.calledOnce).to.be.true;
     expect(res.status.calledWith(201)).to.be.true;
     expect(res.json.calledWithMatch({ message: 'Stock created successfully' })).to.be.true;
-
-    // Restore the stubbed method
-    saveStub.restore();
   });
 
   it('should return 500 if an error occurs during stock creation', async () => {
@@ -61,22 +73,38 @@ describe('Create Stock Function Test', () => {
       json: sinon.spy()
     };
 
+    console.log('Creating stock with body:', req.body);
+
+
     // Stub the save function of Stock model to reject with an error
-    const saveStub = sinon.stub(Stock.prototype, 'save').rejects(new Error('Database error'));
+    createStockStub.rejects(new Error('Database error'));
+
+    console.log('Before calling createStockLevel');
 
     await createStockLevel(req, res);
+
+    console.log('After calling createStockLevel');
 
     expect(res.status.calledWith(500)).to.be.true;
     expect(res.json.calledWithMatch({ message: 'Database error' })).to.be.true;
 
-    // Restore the stubbed method
-    saveStub.restore();
   });
 });
 
 
   //test update stock 
   describe('Update Function Test', () => {
+
+    let updatestockStub;
+
+    beforeEach(() => {
+      updatestockStub = sinon.stub(Stock, 'findById');
+    });
+
+    afterEach(() => {
+      updatestockStub.restore(); 
+    });
+
     it('should update stock successfully', async () => {
       const stockId = new mongoose.Types.ObjectId();
       const existingStock = {
@@ -89,7 +117,7 @@ describe('Create Stock Function Test', () => {
         save: sinon.stub().resolvesThis(),
       };
   
-      const findByIdStub = sinon.stub(Stock, 'findById').resolves(existingStock);
+      updatestockStub.resolves(existingStock);
   
       const req = {
         params: { id: stockId },
@@ -108,11 +136,9 @@ describe('Create Stock Function Test', () => {
   
       await updateStockLevel(req, res);
   
-      expect(findByIdStub.calledOnceWith(stockId)).to.be.true;
+      expect(updatestockStub.calledOnceWith(stockId)).to.be.true;
       expect(res.status.calledWith(200)).to.be.true;
       expect(res.json.calledWith({ message: 'Stock updated successfully' })).to.be.true;
-  
-      findByIdStub.restore();
     });
   });
   
@@ -120,6 +146,16 @@ describe('Create Stock Function Test', () => {
 
   //test get stocklevel 
   describe('GetStockLevels Function Test', () => {
+    let getstocksStub;
+  
+      beforeEach(() => {
+        getstocksStub= sinon.stub(Stock, 'findOne');
+        });
+      
+        afterEach(() => {
+          getstocksStub.restore();
+        });
+
     it('should return stock levels successfully', async () => {
 
       // mock the data from stocklevel
@@ -131,7 +167,7 @@ describe('Create Stock Function Test', () => {
       };
 
       //return mock stock use findone
-      const findStub = sinon.stub(Stock, 'findOne').resolves(mockStockLevels);
+      getstocksStub.resolves(mockStockLevels);
       
       //pass id as param
       const req = { params: { product: new mongoose.Types.ObjectId() } }; 
@@ -143,16 +179,26 @@ describe('Create Stock Function Test', () => {
       //call function
       await getStockLevels(req, res);
 
-      expect(findStub.calledOnce).to.be.true;
+      expect(getstocksStub.calledOnce).to.be.true;
       expect(res.status.calledWith(200)).to.be.true;
       expect(res.json.calledWith(mockStockLevels)).to.be.true;
-      
-      findStub.restore();
     });
   });
 
   //test get stock levels by id
   describe('GetStockByProductId Function Test', () => {
+    
+      let stockfindIdStub;
+  
+      beforeEach(() => {
+        stockfindIdStub= sinon.stub(Stock, 'findOne');
+        });
+      
+        afterEach(() => {
+          stockfindIdStub.restore();
+        });
+  
+
     it('should return stock for a given product', async () => {
       const mockStock = {
         product: new mongoose.Types.ObjectId(),
@@ -161,9 +207,9 @@ describe('Create Stock Function Test', () => {
         reorderLevel: 10,
       };
   
-      const findStub = sinon.stub(Stock, 'findOne').resolves(mockStock);
+      stockfindIdStub.resolves(mockStock);
   
-      const req = { params: { product: new mongoose.Types.ObjectId() } }; // Passing the product ID in the request params
+      const req = { params: { product: new mongoose.Types.ObjectId() } };
       const res = {
         status: sinon.stub().returnsThis(),
         json: sinon.spy(),
@@ -171,11 +217,9 @@ describe('Create Stock Function Test', () => {
   
       await getStockByProductId(req, res);
   
-      expect(findStub.calledOnceWith({ product: req.params.product })).to.be.true;
+      expect(stockfindIdStub.calledOnceWith({ product: req.params.product })).to.be.true;
       expect(res.status.calledWith(200)).to.be.true;
       expect(res.json.calledWith(mockStock)).to.be.true;
-  
-      findStub.restore();
     });
   });
   
@@ -184,10 +228,20 @@ describe('Create Stock Function Test', () => {
 
   //test delete stocklevel
   describe('DeleteStock Function Test', () => {
+    let deletestockfindByIdStub;
+
+    beforeEach(() => {
+      deletestockfindByIdStub= sinon.stub(Stock, 'findById');
+      });
+    
+      afterEach(() => {
+        deletestockfindByIdStub.restore();
+      });
+
     it('should delete stock successfully', async () => {
       const req = { params: { id: new mongoose.Types.ObjectId().toString() } };
       const stock = { remove: sinon.stub().resolves() };
-      const findByIdStub = sinon.stub(Stock, 'findById').resolves(stock);
+      deletestockfindByIdStub.resolves(stock);
       
       const res = {
         status: sinon.stub().returnsThis(),
@@ -196,15 +250,14 @@ describe('Create Stock Function Test', () => {
 
       await deleteStock(req, res);
 
-      expect(findByIdStub.calledOnceWith(req.params.id)).to.be.true;
+      expect(deletestockfindByIdStub.calledOnceWith(req.params.id)).to.be.true;
       expect(stock.remove.calledOnce).to.be.true;
       expect(res.json.calledWith({ message: 'Stock deleted' })).to.be.true;
       
-      findByIdStub.restore();
     });
 
     it('should return 404 if stock is not found', async () => {
-      const findByIdStub = sinon.stub(Stock, 'findById').resolves(null);
+       deletestockfindByIdStub.resolves(null);
       
       const req = { params: { id: new mongoose.Types.ObjectId().toString() } };
       const res = {
@@ -214,10 +267,8 @@ describe('Create Stock Function Test', () => {
 
       await deleteStock(req, res);
 
-      expect(findByIdStub.calledOnceWith(req.params.id)).to.be.true;
+      expect(deletestockfindByIdStub.calledOnceWith(req.params.id)).to.be.true;
       expect(res.status.calledWith(404)).to.be.true;
       expect(res.json.calledWith({ message: 'Stock not found' })).to.be.true;
-      
-      findByIdStub.restore();
     });
   });

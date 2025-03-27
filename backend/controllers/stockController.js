@@ -36,7 +36,7 @@ const getStockLevels = async (req, res) => {
 const getStockByProductId = async (req, res) => {
     try {
         const stock = await Stock.find({ product: req.params.productId }).populate('supplier');
-        if (!stock,length) {
+        if (!stock || stock.length === 0) {
             return res.status(404).json({ message: "Stock not found for this product" });
         }
         res.status(200).json(stock);
@@ -47,25 +47,24 @@ const getStockByProductId = async (req, res) => {
 
 // Update stock level
 const updateStockLevel = async (req, res) => {
-    const stockId = req.params.id;
-    const { quantity, reorderLevel } = req.body;
-    try {
-      const stock = await Stock.findById(stockId);
-      if (!stock) {
-        return res.status(404).json({ message: 'Stock not found' });
-      }
-  
-      // just Update what passed the stock details
-      stock.quantity = quantity ?? stock.quantity;
-      stock.reorderLevel = reorderLevel ?? stock.reorderLevel;
-  
-      await stock.save();
-      res.status(200).json({ message: 'Stock updated successfully', stock });
-    } catch (error) {
-      res.status(500).json({ message: error.message });
+  try {
+    const stock = await Stock.findById(req.params.id);
+    
+    if (!stock) {
+      return res.status(404).json({ message: 'Stock not found' });
     }
-  };
-  
+
+    // Update stocklevel
+    stock.quantity = req.body.quantity;
+    stock.reorderLevel = req.body.reorderLevel;
+    await stock.save();
+    
+    res.status(200).json({ message: 'Stock updated successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 
 // Delete stock entry (if a product is removed)
 const deleteStock = async (req, res) => {
