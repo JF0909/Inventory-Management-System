@@ -1,4 +1,4 @@
-const Product = require('../models/productModel');
+const Product = require('../models/Product');
 
 // Get all products
 const getProducts = async (req, res) => {
@@ -26,12 +26,12 @@ const getProductById = async (req, res) => {
 
 const addProduct = async (req,res) => {
     try{
-        const { name, category, price, stockQuantity, supplier} = req.body;
-        if(!name || ! xategory || !price || !stockQuantity ||!supplier){
-            return res.status(400).json({ messgae: "fields are matched "});
+        const { name, category, price, stockLevel} = req.body;
+        if(!name || ! category || !price || !stockLevel){
+            return res.status(400).json({ message: "fields are required "});
         }
         
-        const product = new Product ({ name, category, price, stockQuantity, supplier});
+        const product = new Product ({ name, category, price, stockLevel});
         await product.save();
         res.status(201).json({ message: "Successfully created the product", product});
 
@@ -43,7 +43,7 @@ const addProduct = async (req,res) => {
 // Update product info
 const updateProduct = async (req, res) => {
     try {
-        const { name, category, price, stockQuantity, supplier } = req.body;
+        const { name, category, price, stockLevel} = req.body;
         const product = await Product.findById(req.params.id);
 
         if (!product) {
@@ -54,8 +54,7 @@ const updateProduct = async (req, res) => {
         product.name = name || product.name;
         product.category = category || product.category;
         product.price = price || product.price;
-        product.stockQuantity = stockQuantity || product.stockQuantity;
-        product.supplier = supplier || product.supplier;
+        product.stockLevel = stockLevel || product.stockLevel;
 
         await product.save();
         res.status(200).json({ message: "Successfully updated the product", product });

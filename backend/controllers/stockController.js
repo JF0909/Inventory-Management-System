@@ -1,10 +1,31 @@
-const Stock = require('../models/stockModel');
+const Stock = require('../models/Stock');
+
+//create stocklevel
+const createStockLevel = async (req, res) => {
+    const { product, supplier,quantity, reorderLevel } = req.body;
+  
+    try {
+      const newStockLevel = new Stock({
+        product,
+        supplier,
+        quantity,
+        reorderLevel
+      });
+  
+      
+      await newStockLevel.save();
+  
+      res.status(201).json({ message: 'Stocklevel created successfully', newStockLevel });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  };
+  
 
 // Get all stock levels
-// match Jira user story 4 track stock levels
 const getStockLevels = async (req, res) => {
     try {
-        const stockLevels = await Stock.find();
+        const stockLevels = await Stock.find().populate('product supplier');
         res.status(200).json(stockLevels);
     } catch (error) {
         res.status(500).json({ message: "Server error: " + error.message });
@@ -14,8 +35,8 @@ const getStockLevels = async (req, res) => {
 // Get stock level by product ID
 const getStockByProductId = async (req, res) => {
     try {
-        const stock = await Stock.findOne({ productId: req.params.productId });
-        if (!stock) {
+        const stock = await Stock.find({ product: req.params.productId }).populate('supplier');
+        if (!stock,length) {
             return res.status(404).json({ message: "Stock not found for this product" });
         }
         res.status(200).json(stock);
@@ -26,26 +47,30 @@ const getStockByProductId = async (req, res) => {
 
 // Update stock level
 const updateStockLevel = async (req, res) => {
+    const stockId = req.params.id;
+    const { quantity, reorderLevel } = req.body;
     try {
-        const { quantity } = req.body;
-        const stock = await Stock.findOne({ productId: req.params.productId });
-
-        if (!stock) {
-            return res.status(404).json({ message: "Stock not found for this product" });
-        }
-
-        stock.quantity = quantity || stock.quantity;
-        await stock.save();
-        res.status(200).json({ message: "Stock level updated", stock });
+      const stock = await Stock.findById(stockId);
+      if (!stock) {
+        return res.status(404).json({ message: 'Stock not found' });
+      }
+  
+      // just Update what passed the stock details
+      stock.quantity = quantity ?? stock.quantity;
+      stock.reorderLevel = reorderLevel ?? stock.reorderLevel;
+  
+      await stock.save();
+      res.status(200).json({ message: 'Stock updated successfully', stock });
     } catch (error) {
-        res.status(500).json({ message: "Server error: " + error.message });
+      res.status(500).json({ message: error.message });
     }
-};
+  };
+  
 
 // Delete stock entry (if a product is removed)
 const deleteStock = async (req, res) => {
     try {
-        const stock = await Stock.findOne({ productId: req.params.productId });
+        const stock = await Stock.findOne({ product: req.params.productId });
         if (!stock) return res.status(404).json({ message: "Stock not found" });
 
         await stock.deleteOne();
@@ -55,4 +80,4 @@ const deleteStock = async (req, res) => {
     }
 };
 
-module.exports = { getStockLevels, getStockByProductId, updateStockLevel, deleteStock };
+module.exports = { createStockLevel, getStockLevels, getStockByProductId, updateStockLevel, deleteStock };

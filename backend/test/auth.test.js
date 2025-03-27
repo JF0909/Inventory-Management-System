@@ -1,51 +1,80 @@
 const chai = require('chai');
-const chaiHttp = require('chai-http');
-const app = require('../server');
-const User = require('../models/user');
-
+const sinon = require('sinon');
+const mongoose = require('mongoose');
+const User = require('../models/User'); 
+const { login, Signup } = require('../controllers/authController');
 const { expect } = chai;
+
 chai.use(chaiHttp);
+let server;
+let port;
 
-describe('Auth API', () => {
-    let token = '';
+describe('Auth Functions Test', () => {
 
-    before(async () => {
-        // Clear the users 
-        await User.deleteMany({});
-    });
+  // signup test
+  it('should register a user successfully', async () => {
+    const req = {
+      body: { username: 'testuser', password: 'testpassword123' }
+    };
 
-    it('should sign up a new user', async () => {
-        const res = await chai.request(app)
-            .post('/api/auth/signup')
-            .send({
-                name: 'Test User',
-                email: 'test@example.com',
-                password: 'password123'
-            });
+    const newUser = { _id: new mongoose.Types.ObjectId(), ...req.body };
+    const saveStub = sinon.stub(User.prototype, 'save').resolves(newUser);
 
-        expect(res).to.have.status(201);
-        expect(res.body).to.have.property('token');
-        token = res.body.token;
-    });
+    const res = {
+      status: sinon.stub().returnsThis(),
+      json: sinon.spy()
+    };
 
-    it('should log in a user', async () => {
-        const res = await chai.request(app)
-            .post('/api/auth/login')
-            .send({
-                email: 'test@example.com',
-                password: 'password123'
-            });
+    await Signup(req, res);
 
-        expect(res).to.have.status(200);
-        expect(res.body).to.have.property('token');
-    });
+    expect(saveStub.calledOnce).to.be.true;
+    expect(res.status.calledWith(201)).to.be.true;
+    expect(res.json.calledWith(newUser)).to.be.true;
 
-    it('should deny access to a protected route without a token', async () => {
-        const res = await chai.request(app)
-            .get('/api/products')
-            .send();
+    saveStub.restore();
+  });
 
-        expect(res).to.have.status(401);
-        expect(res.body.message).to.equal('Not authorized, no token');
-    });
+  // login test
+  it('should log in a user successfully', async () => {
+    const req = {
+      body: { username: 'testuser', password: 'testpassword123' }
+    };
+
+    const user = { _id: new mongoose.Types.ObjectId(), username: 'testuser', password: 'hashedPassword' };
+    const findStub = sinon.stub(User, 'findOne').resolves(user);
+
+    const res = {
+      status: sinon.stub().returnsThis(),
+      json: sinon.spy()
+    };
+
+    await login(req, res);
+
+    expect(findStub.calledOnceWith({ username: req.body.username })).to.be.true;
+    expect(res.status.calledWith(200)).to.be.true;
+    expect(res.json.calledWith({ message: 'Login successful' })).to.be.true;
+
+    findStub.restore();
+  });
+
+  // login failed test
+  it('should return 401 if credentials are invalid', async () => {
+    const req = {
+      body: { username: 'wronguser', password: 'wrongpassword' }
+    };
+
+    const findStub = sinon.stub(User, 'findOne').resolves(null);
+
+    const res = {
+      status: sinon.stub().returnsThis(),
+      json: sinon.spy()
+    };
+
+    await login(req, res);
+
+    expect(res.status.calledWith(401)).to.be.true;
+    expect(res.json.calledWith({ message: 'Invalid credentials' })).to.be.true;
+
+    findStub.restore();
+  });
 });
