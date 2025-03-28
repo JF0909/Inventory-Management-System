@@ -34,6 +34,8 @@ Technologies
 
 4.Frontend(CRA, Mantine)
 
-5.CI/CD pipeline details:
+5.CI/CD pipeline details: configure EC2 on AWS, use nginx pm2 deploy the server, setup GitHub action environment, use github action runner to test CI.
+
+EC2 instance ID: :  i-080474915705aa243;   name: n11886609;
 
 6.Git repository:https://github.com/JF0909/Inventory-Management-System.git
