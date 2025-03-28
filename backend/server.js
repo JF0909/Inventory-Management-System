@@ -13,8 +13,6 @@ app.use(express.json());
 //routes
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/products', require('./routes/productRoutes'));
-app.use('/api/stock', require('./routes/stockRoutes'));
-app.use('/api/suppliers', require('./routes/supplierRoutes'));
 
 //export testing
 if(require.main === module){
