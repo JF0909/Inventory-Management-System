@@ -5,18 +5,35 @@ An application designed to help keeping track of an inventory. Aimed at avoid ov
 
 Features
 
-1.Manage product
-2.Track products
-3.Track stock level with shipping status and location
-4.Set minimum stock level for reorder notification 
-5.Manage suppliers
+1. Sign up
+2. Login
+3. Auth
+4. Manage products(add, update, getall, getbyId, delete)
+5. Track products
+
+Project Develop Logic:
+1. Confirm the 2 main feature: manage user and products
+2. Configure db and create models for user and products
+3. Server.js
+4. Set routes, controller for user and products
+5. Middleware For Authentication
+6. Write test file with Mocha, chai, sinon for testing the CRUD in my project
+7. Test passed, setup  yml file for CI/CD test
+8. Configure the AWS EC2
+9. Install Nginx,reverse proxy
+10. Use PM2 restart, manage node.js project
+
 
 Technologies
 
 1.JIRA board URL: https://636-jingwen-f07u.atlassian.net/jira/software/projects/IMS/boards/5/backlog?selectedIssue=IMS-8&atlOrigin=eyJpIjoiN2FmMWM0NmVkOTdlNGI5NDljMmM5MzRjNDM5ZGM5MGUiLCJwIjoiaiJ9
 
 2.Requirement SysML diagram
-3.API for Backend
-4.React.js for Frontend
+
+3.Backend (node, express, MongoDB)
+
+4.Frontend(CRA, Mantine)
+
 5.CI/CD pipeline details:
+
 6.Git repository:https://github.com/JF0909/Inventory-Management-System.git
