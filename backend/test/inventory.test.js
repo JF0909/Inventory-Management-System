@@ -7,7 +7,7 @@ const sinon = require('sinon');
 const bcrypt = require('bcrypt');
 const mongoose = require('mongoose');
 //import user model
-const User = require('../models/User'); 
+//const User = require('../models/User'); 
 //import user controller
 const { signup, login } = require('../controllers/authController');
 //import product model
